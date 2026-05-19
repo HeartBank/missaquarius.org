@@ -1,0 +1,67 @@
+name: Prior-art snapshot
+
+# Automates the Internet Archive leg of the snapshot wave on every push
+# (and on-demand via the Actions tab → "Run workflow"). archive.today and
+# perma.cc resist automation (anti-bot / quota), so the job emits prefilled
+# clickable links for those two in the run summary — your only manual step.
+#
+# SPA note: if the site is a Lit/Firebase SPA, Internet Archive's Save Page
+# Now runs JS and captures the route + rendered metadata at a timestamp;
+# imperfect SPA fidelity is an accepted prior-art limitation. For 301-redirect
+# URLs, Wayback records the 301 itself — that preserves citation stability.
+#
+# This workflow file is intentionally IDENTICAL across the thonly.org,
+# heartbank.net, and missaquarius.org repos. Keep them in sync; do not
+# diverge one without the others.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Submit to Internet Archive + emit manual links
+        shell: bash
+        run: |
+          set -uo pipefail
+          MANIFEST="snapshot-urls.txt"
+          if [ ! -f "$MANIFEST" ]; then
+            echo "No $MANIFEST in repo root; nothing to snapshot." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "## Prior-art snapshot — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "Internet Archive submitted automatically. **archive.today** and **perma.cc** are manual (anti-bot / quota) — click the links below per URL."
+            echo "Any URL not showing HTTP 200/2xx may have hit Internet Archive rate-limiting — re-run later via **Actions → Prior-art snapshot → Run workflow**."
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          while IFS= read -r raw || [ -n "$raw" ]; do
+            url="$(echo "$raw" | sed 's/#.*//' | xargs)"
+            [ -z "$url" ] && continue
+            enc="$(jq -rn --arg u "$url" '$u|@uri')"
+            echo "Submitting to Internet Archive: $url"
+            code="$(curl -s -L -m 90 -o /dev/null -w '%{http_code}' \
+              -A 'HeartBank-snapshot-bot (+https://heartbank.net)' \
+              "https://web.archive.org/save/$url" || echo 000)"
+            echo "  Internet Archive HTTP $code"
+            {
+              echo "### \`$url\`"
+              echo ""
+              echo "- 🗄️ **Internet Archive** — submitted (HTTP $code) · [view captures](https://web.archive.org/web/*/$url)"
+              echo "- 📎 **archive.today** — *click to capture:* https://archive.ph/?url=$enc"
+              echo "- ⚖️ **perma.cc** — *capture manually at* https://perma.cc/ · paste: \`$url\`"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+            sleep 12
+          done < "$MANIFEST"
+          echo "Done. Open the job summary for the archive.today / perma.cc links."

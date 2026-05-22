@@ -1,4 +1,4 @@
 # Canonical URLs to prior-art-snapshot on push (one per line; # = comment).
 # Add a line whenever a new public page ships on missaquarius.org.
 https://missaquarius.org/
-https://missaquarius.org/architecture.html
+https://missaquarius.org/bodhisattva.html

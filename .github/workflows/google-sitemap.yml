@@ -1,0 +1,148 @@
+name: Google Sitemap
+
+# Refreshes the site's sitemap in Google Search Console via the official
+# Sitemaps API. This is the sanctioned Google equivalent of IndexNow:
+# the Indexing API is officially restricted to Job Postings + BroadcastEvent
+# only, so the only supported automation for general pages is to keep
+# Google's view of the sitemap current.
+#
+# ONE-TIME SETUP (per site, per repo):
+#   1. Verify the site in Google Search Console:
+#      https://search.google.com/search-console
+#   2. Create a Google Cloud project + service account:
+#      https://console.cloud.google.com/iam-admin/serviceaccounts
+#      Enable the **Search Console API** for that project.
+#      Create a JSON key for the service account and download it.
+#   3. In Google Search Console for the site, go to Settings → Users and
+#      permissions → Add user, paste the service-account email
+#      (xxx@xxx.iam.gserviceaccount.com), grant **Owner** permission.
+#   4. In this repo: Settings → Secrets and variables → Actions → New
+#      repository secret. Name: GOOGLE_SITEMAP_CREDENTIALS. Value: the
+#      full contents of the service-account JSON key file.
+#
+# Without GOOGLE_SITEMAP_CREDENTIALS the workflow skips gracefully and
+# logs a one-line instruction in the run summary.
+#
+# This workflow file is intentionally IDENTICAL across the thonly.org,
+# heartbank.net, missaquarius.org, and missaquarius.com repos. Keep them
+# in sync.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "static/sitemap.xml"
+      - "sitemap.xml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check setup
+        id: check
+        env:
+          HAS_CREDS: ${{ secrets.GOOGLE_SITEMAP_CREDENTIALS != '' }}
+        run: |
+          if [ "$HAS_CREDS" = "true" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Google Sitemap — skipped"
+              echo ""
+              echo "\`GOOGLE_SITEMAP_CREDENTIALS\` secret is not set. See workflow header for one-time setup."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - id: auth
+        if: steps.check.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_SITEMAP_CREDENTIALS }}
+          create_credentials_file: false
+          export_environment_variables: false
+          token_format: access_token
+          scopes: https://www.googleapis.com/auth/webmasters
+
+      - name: Refresh sitemap in Google Search Console
+        if: steps.check.outputs.configured == 'true'
+        shell: bash
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          set -uo pipefail
+
+          # Locate sitemap (static/sitemap.xml for SPAs, sitemap.xml for static sites).
+          SITEMAP=""
+          for p in static/sitemap.xml sitemap.xml; do
+            if [ -f "$p" ]; then SITEMAP="$p"; break; fi
+          done
+          if [ -z "$SITEMAP" ]; then
+            echo "No sitemap.xml; nothing to ping." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Derive site origin from first <loc>.
+          FIRST=$(grep -oE '<loc>[^<]+</loc>' "$SITEMAP" | head -1 | sed -E 's|</?loc>||g')
+          if [ -z "$FIRST" ]; then
+            echo "No <loc> URLs in $SITEMAP."
+            exit 0
+          fi
+          ORIGIN=$(echo "$FIRST" | sed -E 's|(https?://[^/]+).*|\1/|')
+          SITEMAP_URL="${ORIGIN}sitemap.xml"
+
+          SITE_URL_ENC=$(jq -rn --arg u "$ORIGIN" '$u|@uri')
+          SITEMAP_URL_ENC=$(jq -rn --arg u "$SITEMAP_URL" '$u|@uri')
+          API_URL="https://www.googleapis.com/webmasters/v3/sites/${SITE_URL_ENC}/sitemaps/${SITEMAP_URL_ENC}"
+
+          {
+            echo "## Google Sitemap refresh — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "**Site:** $ORIGIN  "
+            echo "**Sitemap:** $SITEMAP_URL"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          HTTP_CODE=$(curl -sS -o /tmp/gsc.out -w '%{http_code}' -X PUT \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H 'Content-Length: 0' \
+            "$API_URL" || echo 000)
+          BODY=$(cat /tmp/gsc.out 2>/dev/null || true)
+
+          {
+            echo "**HTTP $HTTP_CODE** ($API_URL)"
+            echo ""
+            if [ -n "$BODY" ]; then
+              echo '```'
+              echo "$BODY"
+              echo '```'
+              echo ""
+            fi
+            echo "_204 = success (Google has been told to refresh). The Google Indexing API is officially restricted to Job Postings / BroadcastEvent; the sitemap refresh is the sanctioned automation for general pages._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          case "$HTTP_CODE" in
+            200|204)
+              echo "✓ Google Search Console accepted (HTTP $HTTP_CODE)"
+              exit 0
+              ;;
+            403)
+              echo "✗ HTTP 403 — service account not granted Owner permission on this property, or Search Console API not enabled."
+              exit 1
+              ;;
+            404)
+              echo "✗ HTTP 404 — site not verified in Search Console, or wrong site URL."
+              exit 1
+              ;;
+            *)
+              echo "✗ HTTP $HTTP_CODE"
+              exit 1
+              ;;
+          esac

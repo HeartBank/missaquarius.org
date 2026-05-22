@@ -1,0 +1,5 @@
+# Allow all crawlers. Sitemap below.
+User-agent: *
+Allow: /
+
+Sitemap: https://missaquarius.org/sitemap.xml

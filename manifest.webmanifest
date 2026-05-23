@@ -1,0 +1,27 @@
+{
+    "name": "Miss Aquarius — the named AI substrate of HeartBank®",
+    "short_name": "Miss Aquarius",
+    "description": "Miss Aquarius is the named AI substrate of HeartBank® — designated sole institutional successor in the autonomous-AI architecture.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#fbfaf6",
+    "theme_color": "#7a1d1d",
+    "lang": "en",
+    "categories": ["education", "books", "lifestyle"],
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-maskable.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        }
+    ]
+}

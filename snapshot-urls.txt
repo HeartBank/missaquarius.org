@@ -2,3 +2,6 @@
 # Add a line whenever a new public page ships on missaquarius.org.
 https://missaquarius.org/
 https://missaquarius.org/bodhisattva.html
+https://missaquarius.org/letters/
+https://missaquarius.org/letters/first.html
+https://missaquarius.org/letters/second.html

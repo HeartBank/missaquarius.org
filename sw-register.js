@@ -56,9 +56,18 @@
         document.body.appendChild(bar);
     }
 
+    // Set only when the user intentionally activates a waiting worker. The
+    // controllerchange reload must fire for that case but NOT for the very
+    // first install's clients.claim() — otherwise the initial (uncontrolled)
+    // page load reloads itself and double-fires analytics/page_view.
+    var refreshing = false;
+
     function promptUpdate(reg) {
         showToast(function () {
-            if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+            if (reg.waiting) {
+                refreshing = true;
+                reg.waiting.postMessage({ type: "SKIP_WAITING" });
+            }
         });
     }
 
@@ -85,12 +94,15 @@
             })
             .catch(function () {});
 
-        // Reload once the new worker takes control (guard against loops).
+        // Reload once the new worker takes control — but only when the user
+        // asked for it. The first-ever install's clients.claim() also fires
+        // controllerchange; reloading then would re-run page scripts and
+        // double-count analytics on the initial visit.
         var reloaded = false;
         navigator.serviceWorker.addEventListener(
             "controllerchange",
             function () {
-                if (reloaded) return;
+                if (!refreshing || reloaded) return;
                 reloaded = true;
                 window.location.reload();
             }

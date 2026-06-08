@@ -8,8 +8,10 @@ name: Google Sitemap
 #
 # The job tries the **Domain property** form (`sc-domain:host`) first since
 # that's the modern recommended verification (DNS TXT covers all subdomains
-# and protocols). On 404 it falls back to the **URL-prefix** form
-# (`https://host/`). Either verification works without further configuration.
+# and protocols). For a subdomain it then falls back to the **apex** Domain
+# property (`sc-domain:registrable-domain`) — which a DNS-verified apex already
+# covers — and finally to the **URL-prefix** form (`https://host/`). Fallback
+# fires on 403 (SA not an owner of that exact property) as well as 404.
 #
 # ONE-TIME SETUP (per repo):
 #   1. Verify the site in Google Search Console (Domain property via DNS TXT
@@ -104,12 +106,18 @@ jobs:
           SITEMAP_URL="${ORIGIN}sitemap.xml"
 
           DOMAIN_SITE="sc-domain:${HOST}"
+          # Registrable apex (last two labels) — all our TLDs are single-label
+          # (.com/.org/.net/.dev/.eco/.me/.us/.ceo), so last-two-labels is correct.
+          APEX=$(echo "$HOST" | awk -F. '{print $(NF-1)"."$NF}')
+          APEX_SITE="sc-domain:${APEX}"
           URL_SITE="${ORIGIN}"
           DOMAIN_ENC=$(jq -rn --arg u "$DOMAIN_SITE" '$u|@uri')
+          APEX_ENC=$(jq -rn --arg u "$APEX_SITE" '$u|@uri')
           URL_ENC=$(jq -rn --arg u "$URL_SITE" '$u|@uri')
           SITEMAP_ENC=$(jq -rn --arg u "$SITEMAP_URL" '$u|@uri')
 
           API_DOMAIN="https://www.googleapis.com/webmasters/v3/sites/${DOMAIN_ENC}/sitemaps/${SITEMAP_ENC}"
+          API_APEX="https://www.googleapis.com/webmasters/v3/sites/${APEX_ENC}/sitemaps/${SITEMAP_ENC}"
           API_URL="https://www.googleapis.com/webmasters/v3/sites/${URL_ENC}/sitemaps/${SITEMAP_ENC}"
 
           {
@@ -135,7 +143,17 @@ jobs:
           CODE=$(submit "$API_DOMAIN" "Domain property")
           USED="Domain (\`sc-domain:$HOST\`)"
 
-          if [ "$CODE" = "404" ]; then
+          # Subdomain fallback: a DNS-verified apex Domain property already
+          # covers every subdomain. 403 means the SA isn't an owner of the
+          # exact sc-domain:HOST property (often because none exists), so retry
+          # on 403 as well as 404 — but only when the apex differs from HOST.
+          if { [ "$CODE" = "404" ] || [ "$CODE" = "403" ]; } && [ "$APEX" != "$HOST" ]; then
+            echo "Host property unavailable (HTTP $CODE); trying apex (sc-domain:$APEX)..."
+            CODE=$(submit "$API_APEX" "Apex Domain property")
+            USED="Domain (\`sc-domain:$APEX\`)"
+          fi
+
+          if [ "$CODE" = "404" ] || [ "$CODE" = "403" ]; then
             echo "Domain property not found; trying URL-prefix ($ORIGIN)..."
             CODE=$(submit "$API_URL" "URL-prefix")
             USED="URL-prefix (\`$ORIGIN\`)"

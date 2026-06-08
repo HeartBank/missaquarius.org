@@ -74,7 +74,7 @@ jobs:
           create_credentials_file: false
           export_environment_variables: false
           token_format: access_token
-          scopes: https://www.googleapis.com/auth/webmasters
+          access_token_scopes: https://www.googleapis.com/auth/webmasters
 
       - name: Refresh sitemap in Google Search Console
         if: steps.check.outputs.configured == 'true'
@@ -127,7 +127,7 @@ jobs:
               -H "Authorization: Bearer $ACCESS_TOKEN" \
               -H 'Content-Length: 0' \
               "$target" || echo 000)
-            echo "  → $label: HTTP $code"
+            echo "  → $label: HTTP $code" >&2
             echo "$code"
           }
 

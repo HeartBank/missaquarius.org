@@ -1,6 +1,6 @@
 name: Prior-art snapshot
 
-# Automates the Internet Archive leg of the snapshot wave on every push
+# Automates the Internet Archive leg of the snapshot wave on a weekly schedule
 # (and on-demand via the Actions tab → "Run workflow"). archive.today and
 # perma.cc resist automation (anti-bot / quota), so the job emits prefilled
 # clickable links for those two in the run summary — your only manual step.
@@ -15,8 +15,14 @@ name: Prior-art snapshot
 # diverge one without the others.
 
 on:
-  push:
-    branches: [main, master]
+  schedule:
+    # Weekly (Sundays 06:00 UTC). Prior-art archival is not time-sensitive, so
+    # this no longer runs on every push — each per-push run cost ~48 min of
+    # Actions minutes (it submits the whole snapshot-urls.txt to the Internet
+    # Archive with a 12s pause per URL). Just published a paper and want an
+    # immediate snapshot? Trigger it manually: Actions → Prior-art snapshot →
+    # Run workflow (the workflow_dispatch below).
+    - cron: "0 6 * * 0"
   workflow_dispatch:
 
 permissions:

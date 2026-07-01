@@ -96,7 +96,11 @@ jobs:
             exit 0
           fi
 
-          FIRST=$(grep -oE '<loc>[^<]+</loc>' "$SITEMAP" | head -1 | sed -E 's|</?loc>||g')
+          # Capture then slice: piping grep straight into `head -1` makes grep
+          # race a SIGPIPE ("write error: Broken pipe", exit 2) on large
+          # sitemaps, which `-e -o pipefail` turns into a failed job.
+          ALL_LOCS=$(grep -oE '<loc>[^<]+</loc>' "$SITEMAP" || true)
+          FIRST=$(head -1 <<< "$ALL_LOCS" | sed -E 's|</?loc>||g')
           if [ -z "$FIRST" ]; then
             echo "No <loc> URLs in $SITEMAP."
             exit 0

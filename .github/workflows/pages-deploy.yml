@@ -10,6 +10,11 @@ name: Deploy to GitHub Pages
 # Switching the Source does not take the live site down; the previous deploy
 # stays served until this workflow's first deploy succeeds.
 #
+# RE-RUN SAFETY: do not re-run a whole failed deploy — re-running uploads a
+# second "github-pages" artifact and deploy-pages@v4 aborts on seeing two.
+# Prefer a fresh push or workflow_dispatch. The "Clear stale Pages artifact"
+# step below also deletes any leftover artifact so re-runs stay safe anyway.
+#
 # This workflow file is intentionally IDENTICAL across the missaquarius.org
 # and missaquarius.com repos (both are pure-static GitHub Pages sites with
 # CNAMEs). Keep them in sync; do not diverge one without the other.
@@ -23,6 +28,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write   # delete stale github-pages artifacts so re-runs stay safe
 
 # Allow one deployment at a time; let an in-progress deploy finish.
 concurrency:
@@ -41,6 +47,26 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
+      - name: Clear stale Pages artifact (safe re-runs)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            for (const artifact of data.artifacts) {
+              if (artifact.name === 'github-pages') {
+                core.info(`Deleting stale artifact ${artifact.id}`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            }
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

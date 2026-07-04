@@ -13,8 +13,9 @@ name: Prior-art snapshot
 # manual step.
 #
 # Incremental detection (changed mode): a URL is skipped ONLY when its dedicated
-# source file — derived by convention as src/pages<url-path>.ts — exists and did
-# NOT change in the push range (github.event.before..github.sha). Every other URL
+# source file — src/pages<url-path>.ts (path-mirrored) or src/pages/content/<slug>.ts
+# (flat content module; <slug> = the URL's last segment) — exists and did NOT
+# change in the push range (github.event.before..github.sha). Every other URL
 # (homepages "/", category/index pages, and any repo that doesn't follow that
 # convention) is submitted. So a genuinely changed page is never missed on push,
 # and the weekly full run re-archives everything within 7 days regardless. A new
@@ -97,16 +98,26 @@ jobs:
           fi
           echo "Mode: $MODE"
 
-          # Skip a URL only when its dedicated source file (src/pages<path>.ts)
-          # exists AND did not change in this push. Everything else is submitted.
+          # Skip a URL only when its dedicated source file exists AND did not
+          # change in this push. Two conventions are recognised:
+          #   src/pages<url-path>.ts          (path-mirrored, e.g. .../research/<slug>.ts)
+          #   src/pages/content/<slug>.ts     (flat content module; <slug> = last segment)
+          # If neither exists (homepages, category/index pages, non-conforming
+          # repos) the URL is always submitted. Everything else is submitted too.
           skip_url() {
             [ "$MODE" = "full" ] && return 1
-            local p cand
+            local p last cand
             p="$(printf '%s' "$1" | sed -E 's#^[a-zA-Z]+://[^/]+##; s#[?#].*$##; s#/+$##')"
             [ -z "$p" ] && return 1                              # homepage "/" => submit
-            cand="src/pages${p}.ts"
-            [ -f "$cand" ] || return 1                           # no dedicated file => submit
-            printf '%s\n' "$CHANGED" | grep -Fxq "$cand" && return 1   # changed => submit
+            last="${p##*/}"
+            cand=""
+            if [ -f "src/pages${p}.ts" ]; then
+              cand="src/pages${p}.ts"                            # path-mirrored page file
+            elif [ -f "src/pages/content/${last}.ts" ]; then
+              cand="src/pages/content/${last}.ts"               # flat content module
+            fi
+            [ -n "$cand" ] || return 1                           # no dedicated file => submit
+            printf '%s\n' "$CHANGED" | grep -Fxq "$cand" && return 1   # its source changed => submit
             return 0                                             # mapped + unchanged => skip
           }
 

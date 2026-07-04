@@ -1,29 +1,51 @@
 name: Prior-art snapshot
 
-# Automates the Internet Archive leg of the snapshot wave on a weekly schedule
-# (and on-demand via the Actions tab → "Run workflow"). archive.today and
-# perma.cc resist automation (anti-bot / quota), so the job emits prefilled
-# clickable links for those two in the run summary — your only manual step.
+# Automates the Internet Archive leg of the snapshot wave.
 #
-# SPA note: if the site is a Lit/Firebase SPA, Internet Archive's Save Page
-# Now runs JS and captures the route + rendered metadata at a timestamp;
-# imperfect SPA fidelity is an accepted prior-art limitation. For 301-redirect
-# URLs, Wayback records the 301 itself — that preserves citation stability.
+#   push to main/master   -> submit ONLY the pages whose source changed in that
+#                            push (incremental; a publish push is seconds, not
+#                            the ~48 min a full-manifest submit used to cost).
+#   weekly cron (Sun)     -> submit the WHOLE manifest (full refresh + safety net).
+#   Run workflow (manual) -> "mode" input: full (default) or changed.
 #
-# This workflow file is intentionally IDENTICAL across the thonly.org,
-# heartbank.net, and missaquarius.org repos. Keep them in sync; do not
-# diverge one without the others.
+# archive.today and perma.cc resist automation (anti-bot / quota), so the job
+# emits prefilled clickable links for those two in the run summary — your only
+# manual step.
+#
+# Incremental detection (changed mode): a URL is skipped ONLY when its dedicated
+# source file — derived by convention as src/pages<url-path>.ts — exists and did
+# NOT change in the push range (github.event.before..github.sha). Every other URL
+# (homepages "/", category/index pages, and any repo that doesn't follow that
+# convention) is submitted. So a genuinely changed page is never missed on push,
+# and the weekly full run re-archives everything within 7 days regardless. A new
+# branch / unknown base falls back to a full submit. git itself is the ultimate
+# timestamped prior-art backstop; Internet Archive is belt-and-suspenders.
+#
+# SPA note: if the site is a Lit/Firebase SPA, Internet Archive's Save Page Now
+# runs JS and captures the route + rendered metadata at a timestamp; imperfect
+# SPA fidelity is an accepted prior-art limitation. For 301-redirect URLs,
+# Wayback records the 301 itself — that preserves citation stability.
+#
+# Caveat: GitHub disables scheduled workflows after 60 days of repo inactivity;
+# on dormant placeholder repos the weekly leg may pause — any push or manual
+# dispatch re-enables it (and pushes still archive changed pages meanwhile).
+#
+# This workflow file is intentionally IDENTICAL across all site repos. Per-repo
+# variation lives only in each repo's snapshot-urls.txt + its src/pages tree.
+# Keep them in sync; do not diverge one without the others.
 
 on:
+  push:
+    branches: [main, master]
   schedule:
-    # Weekly (Sundays 06:00 UTC). Prior-art archival is not time-sensitive, so
-    # this no longer runs on every push — each per-push run cost ~48 min of
-    # Actions minutes (it submits the whole snapshot-urls.txt to the Internet
-    # Archive with a 12s pause per URL). Just published a paper and want an
-    # immediate snapshot? Trigger it manually: Actions → Prior-art snapshot →
-    # Run workflow (the workflow_dispatch below).
     - cron: "0 6 * * 0"
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "full = whole manifest; changed = only pages changed vs the push base"
+        type: choice
+        options: [full, changed]
+        default: full
 
 permissions:
   contents: read
@@ -34,9 +56,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Submit to Internet Archive + emit manual links
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_MODE: ${{ github.event.inputs.mode }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
         run: |
           set -uo pipefail
           MANIFEST="snapshot-urls.txt"
@@ -44,22 +73,68 @@ jobs:
             echo "No $MANIFEST in repo root; nothing to snapshot." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+
+          # Resolve mode: schedule => full, push => changed, dispatch => input (default full).
+          case "$EVENT_NAME" in
+            schedule)          MODE=full ;;
+            workflow_dispatch) MODE="${DISPATCH_MODE:-full}" ;;
+            push)              MODE=changed ;;
+            *)                 MODE=full ;;
+          esac
+
+          # In changed mode, list files changed in the push range. A missing/unknown
+          # base (new branch, first push, force-push with an orphaned base) => full.
+          CHANGED=""
+          if [ "$MODE" = "changed" ]; then
+            if [ -z "${PUSH_BEFORE:-}" ] \
+               || [ "$PUSH_BEFORE" = "0000000000000000000000000000000000000000" ] \
+               || ! git cat-file -e "${PUSH_BEFORE}^{commit}" 2>/dev/null; then
+              echo "No usable push base ('${PUSH_BEFORE:-}'); falling back to full submit."
+              MODE=full
+            else
+              CHANGED="$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER")"
+            fi
+          fi
+          echo "Mode: $MODE"
+
+          # Skip a URL only when its dedicated source file (src/pages<path>.ts)
+          # exists AND did not change in this push. Everything else is submitted.
+          skip_url() {
+            [ "$MODE" = "full" ] && return 1
+            local p cand
+            p="$(printf '%s' "$1" | sed -E 's#^[a-zA-Z]+://[^/]+##; s#[?#].*$##; s#/+$##')"
+            [ -z "$p" ] && return 1                              # homepage "/" => submit
+            cand="src/pages${p}.ts"
+            [ -f "$cand" ] || return 1                           # no dedicated file => submit
+            printf '%s\n' "$CHANGED" | grep -Fxq "$cand" && return 1   # changed => submit
+            return 0                                             # mapped + unchanged => skip
+          }
+
           {
-            echo "## Prior-art snapshot — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "## Prior-art snapshot — $(date -u '+%Y-%m-%d %H:%M UTC') — mode: \`$MODE\`"
             echo ""
             echo "Internet Archive submitted automatically. **archive.today** and **perma.cc** are manual (anti-bot / quota) — click the links below per URL."
             echo "Any URL not showing HTTP 200/2xx may have hit Internet Archive rate-limiting — re-run later via **Actions → Prior-art snapshot → Run workflow**."
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
+
+          submitted=0
+          skipped=0
           while IFS= read -r raw || [ -n "$raw" ]; do
             url="$(echo "$raw" | sed 's/#.*//' | xargs)"
             [ -z "$url" ] && continue
+            if skip_url "$url"; then
+              echo "Unchanged — skipped: $url"
+              skipped=$((skipped + 1))
+              continue
+            fi
             enc="$(jq -rn --arg u "$url" '$u|@uri')"
             echo "Submitting to Internet Archive: $url"
             code="$(curl -s -L -m 90 -o /dev/null -w '%{http_code}' \
               -A 'HeartBank-snapshot-bot (+https://heartbank.net)' \
               "https://web.archive.org/save/$url" || echo 000)"
             echo "  Internet Archive HTTP $code"
+            submitted=$((submitted + 1))
             {
               echo "### \`$url\`"
               echo ""
@@ -70,4 +145,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             sleep 12
           done < "$MANIFEST"
-          echo "Done. Open the job summary for the archive.today / perma.cc links."
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "_Submitted $submitted · skipped (unchanged) $skipped · mode \`$MODE\`._" >> "$GITHUB_STEP_SUMMARY"
+          echo "Done ($MODE): submitted $submitted, skipped $skipped. Open the job summary for the archive.today / perma.cc links."

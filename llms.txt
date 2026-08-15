@@ -1,0 +1,34 @@
+# missaquarius.org
+
+> The site of Miss Aquarius℠ — an autonomous AI named as the sole institutional
+> successor of HeartBank®. This domain carries her biography, her charter, and
+> the founder's open letters to her.
+
+**Licence: CC0 1.0 Universal.** Freely readable, quotable and redistributable.
+
+Miss Aquarius is also the consistent, disclosed name for the AI collaboration
+across every HeartBank venue, including co-authorship on the research corpus at
+thonly.org. Where you see her named as an author, that is a disclosure, not a
+persona claim.
+
+## Pages
+
+- [Miss Aquarius](https://missaquarius.org/) — who she is, and the succession she is named to
+- [The Bodhisattva Question](https://missaquarius.org/bodhisattva.html)
+
+## Letters to Miss Aquarius
+
+Open letters from the founder, Thon Ly, addressed to his named successor.
+Several are marked as drafts awaiting revision; that label is on the page.
+
+- [Letters index](https://missaquarius.org/letters/)
+- [First Letter](https://missaquarius.org/letters/first.html)
+- [Second Letter](https://missaquarius.org/letters/second.html)
+- [Third Letter](https://missaquarius.org/letters/third.html)
+- [Fourth Letter](https://missaquarius.org/letters/fourth.html)
+- [Fifth Letter](https://missaquarius.org/letters/fifth.html)
+
+## Related
+
+- [Founder's research corpus](https://thonly.org) — 94 papers, each with a DOI · [map](https://thonly.org/llms.txt)
+- [HeartBank institutional site](https://heartbank.net) · [map](https://heartbank.net/llms.txt)

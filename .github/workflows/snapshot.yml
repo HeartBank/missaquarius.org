@@ -160,3 +160,83 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "_Submitted $submitted · skipped (unchanged) $skipped · mode \`$MODE\`._" >> "$GITHUB_STEP_SUMMARY"
           echo "Done ($MODE): submitted $submitted, skipped $skipped. Open the job summary for the archive.today / perma.cc links."
+
+      # ── Manifest drift check ──────────────────────────────────────────────
+      # snapshot-urls.txt is hand-maintained, and a route that is not listed is
+      # simply never archived. Until this step existed NOTHING reported that:
+      # an audit on 2026-08-15 found thonly.org's own homepage plus three
+      # shipped papers missing, and two missaquarius letters absent from both
+      # lists. The generator that is supposed to wire the sitemap and the
+      # manifest together had half-fired and said nothing.
+      #
+      # The sitemap is the authoritative set of public routes, so any <loc>
+      # missing from the manifest is an unarchived page.
+      #
+      # Runs LAST and with if:always(), so the pages that ARE listed still get
+      # archived on this run — but the omission turns the run red instead of
+      # passing in silence. Extra manifest entries are NOT drift: the manifest
+      # deliberately also carries raw.githubusercontent.com markdown sources and
+      # 301-redirect URLs, neither of which belongs in a sitemap.
+      - name: Manifest drift check
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'DRIFT_EOF'
+          import os, re, sys, pathlib
+
+          MANIFEST = pathlib.Path("snapshot-urls.txt")
+          SITEMAPS = ["static/sitemap.xml", "public/sitemap.xml", "sitemap.xml", "dist/sitemap.xml"]
+
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+
+
+          def out(line=""):
+              print(line)
+              if summary:
+                  with open(summary, "a") as fh:
+                      fh.write(line + "\n")
+
+
+          if not MANIFEST.exists():
+              out("No snapshot-urls.txt — nothing to check.")
+              sys.exit(0)
+
+          sitemap = next((pathlib.Path(c) for c in SITEMAPS if pathlib.Path(c).exists()), None)
+          if sitemap is None:
+              out("No sitemap.xml found — drift cannot be checked in this repo.")
+              sys.exit(0)
+
+          manifest = {
+              l.strip()
+              for l in MANIFEST.read_text().splitlines()
+              if l.strip() and not l.lstrip().startswith("#")
+          }
+          routes = set(re.findall(r"<loc>\s*(.*?)\s*</loc>", sitemap.read_text()))
+
+          # A trailing slash is the same page. Compare on a normalised key so that
+          # "https://x.org/" and "https://x.org" never register as drift.
+          norm = lambda u: u.rstrip("/")
+          have = {norm(u) for u in manifest}
+          missing = sorted(u for u in routes if norm(u) not in have)
+
+          out("")
+          out("### Manifest drift")
+          out("")
+          out(f"`{sitemap}` declares **{len(routes)}** public routes; "
+              f"`snapshot-urls.txt` lists **{len(manifest)}** URLs.")
+          out("")
+
+          if not missing:
+              out("✅ Every route in the sitemap is in the archive manifest.")
+              sys.exit(0)
+
+          out(f"⚠️ **{len(missing)} route(s) are in the sitemap but NOT in "
+              "`snapshot-urls.txt`, so they are never submitted to the Internet Archive:**")
+          out("")
+          for u in missing:
+              out(f"- `{u}`")
+          out("")
+          out("Add each line to `snapshot-urls.txt` and push. If a route should "
+              "deliberately never be archived, keep it out of the sitemap too.")
+          sys.exit(1)
+          DRIFT_EOF

@@ -53,7 +53,20 @@
     }
     post("page_view", { path: location.pathname, ref: document.referrer });
     document.addEventListener("click", function (e) {
-        var a = e.target.closest && e.target.closest("a[href]");
+        // A click inside a shadow root is retargeted at the document, so
+        // e.target is the HOST element and closest() from it never reaches the
+        // anchor — which missed every link in a Lit component, i.e. nearly all
+        // of them. composedPath() crosses shadow boundaries; closest() stays as
+        // the pre-shadow-DOM fallback.
+        var a = null;
+        var path = (e.composedPath && e.composedPath()) || [];
+        for (var i = 0; i < path.length; i++) {
+            if (path[i].nodeType === 1 && path[i].matches("a[href]")) {
+                a = path[i];
+                break;
+            }
+        }
+        if (!a && e.target.closest) a = e.target.closest("a[href]");
         if (!a) return;
         post("link_click", {
             href: a.href,

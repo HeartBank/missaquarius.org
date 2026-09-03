@@ -22,6 +22,26 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main, master]
+    # ⛔ TIMESTAMPING COMMITS MUST NOT REDEPLOY THE SITE. This repo is a website
+    # that also holds five documents, so it carries the estate's proof machinery —
+    # and every part of that machinery COMMITS: OTS upgrades rewrite the proofs,
+    # the RFC 3161 leg writes a dated manifest and its authority tokens, and both
+    # log to TIMESTAMPS.md. None of it changes a byte that is served.
+    #
+    # ⚠️ THE PROOFS LIVE NEXT TO THE LETTERS — `letters/*.html.ots` — so ignoring
+    # only `timestamps/**` would leave every OTS upgrade triggering a full deploy.
+    # That is the pattern worth remembering: the artifact and its proof are
+    # siblings on disk, and a path filter written from the directory name alone
+    # misses half of it.
+    #
+    # ⭐ `paths-ignore` skips a push only when EVERY changed file matches, so a
+    # commit that edits a letter AND rotates its proof still deploys, which is the
+    # behaviour we want. Editing this workflow is likewise not ignored — pushing a
+    # change to it proves deploys still fire.
+    paths-ignore:
+      - "timestamps/**"
+      - "TIMESTAMPS.md"
+      - "**/*.ots"
   workflow_dispatch:
 
 permissions:

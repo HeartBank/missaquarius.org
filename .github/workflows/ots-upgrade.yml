@@ -1,0 +1,86 @@
+name: OpenTimestamps upgrade
+
+# Leg 1 maintenance for the Letters to Miss Aquarius: bake the Bitcoin
+# attestation into every proof, so verification stops depending on the calendar
+# servers staying online. A fresh stamp is calendar-only for 1–6 hours; this job
+# is what converts a convenience into evidence.
+#
+# ⛔⛔ THIS JOB UPGRADES. IT DOES NOT STAMP — AND THAT IS THE WHOLE ADAPTATION.
+# The same workflow in the four corpus repos opens with a "Stamp any unstamped
+# papers" step built on `find . -name '*.md'`. Porting that here would be wrong
+# twice over:
+#
+#   1. Every tracked file in a CORPUS repo is a document, so "stamp what lacks a
+#      proof" is a safe rule there. This repo is a WEBSITE that also holds five
+#      documents, and its TIMESTAMPS.md rules that stamping every page "would make
+#      the proof set meaningless by making it universal."
+#   2. Run here today, that step would stamp `TIMESTAMPS.md` and
+#      `timestamps/README.md` — infrastructure that the estate's own
+#      `stamp-new.sh` deliberately excludes. ⚠️ Stamping TIMESTAMPS.md is the
+#      sharpest version of the error: it is the log OF the stamps.
+#
+# ⭐ THE PRINCIPLE, so nobody "completes" this workflow by adding the missing step:
+# in a website repo, WHAT COUNTS AS A DOCUMENT IS A JUDGEMENT, and UPGRADING IS
+# MECHANICAL. Automate the mechanical half. Stamping stays with the estate-wide
+# `stamp-new.sh` — which is correctly scoped ("markdown anywhere, plus HTML *only*
+# under a letters/ directory") and is invoked by hand through the `/ots` skill.
+# `./ots-upgrade.sh` in this repo says the same thing in its own header: it never
+# runs `ots stamp`, because stamping overwrites a proof and would destroy the
+# earlier text's only evidence.
+#
+# SCHEDULING. `17 4 * * 0`, two hours before this repo's RFC 3161 job at `17 6`,
+# matching the estate's offset convention — both commit, and a simultaneous push
+# would collide.
+#
+# ⭐ Safe to schedule only because of `paths-ignore`. Every commit this job makes
+# touches `letters/*.html.ots`, which `pages-deploy.yml` and `snapshot.yml` skip.
+# ⚠️ The proofs are SIBLINGS of the letters rather than living under `timestamps/`,
+# which is why those filters carry `**/*.ots`. Remove that entry and this job
+# starts redeploying a live site weekly.
+
+on:
+  schedule:
+    - cron: "17 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade confirmed proofs
+        run: |
+          ./ots-upgrade.sh | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Report completeness
+        run: |
+          total=$(find . -name '*.ots' ! -name '*.bak' | wc -l)
+          pending=0
+          for p in $(find . -name '*.ots' ! -name '*.bak'); do
+            ~/.cache/ots-venv/bin/ots info "$p" 2>/dev/null \
+              | grep -q BitcoinBlockHeaderAttestation || pending=$((pending + 1))
+          done
+          printf '\n%s proof(s), %s still pending Bitcoin confirmation.\n' \
+            "$total" "$pending" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit any changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Nothing to commit." >> "$GITHUB_STEP_SUMMARY"; exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "timestamps: upgrade proofs with Bitcoin attestations"
+          # The RFC 3161 job commits to this same branch two hours later; rebase
+          # rather than fail if a hand-run landed something in between.
+          git pull --rebase --autostash
+          git push

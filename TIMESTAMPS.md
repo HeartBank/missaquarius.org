@@ -18,6 +18,33 @@ documents, and stamping them would make the proof set meaningless by making it
 universal. `letters/index.html` is the contents page and is excluded for the
 same reason.
 
+## The RFC 3161 leg — added 2026-09-03, and scoped for the same reason
+
+Until now the Letters had **leg 1 only**: OpenTimestamps gives permanence and no
+legal standing, and the estate's whole argument for two legs is that each covers
+the other's weakness. The Letters had the permanent half and not the standing half.
+
+`./tsa-stamp.sh` closes it — but **scoped to `letters/*.html`, not to the
+repository.** Everywhere else in the estate that script manifests `git ls-files`,
+which is correct where every tracked file is a document. Here it would do exactly
+what the paragraph above forbids: make the proof set universal, and therefore
+meaningless. The scope *is* the doctrine, expressed in a `git ls-files` pattern.
+
+⚠️ **It is deliberately NOT on a schedule, and that is the open question rather
+than an oversight.** Every workflow in this repo commits, and both
+`pages-deploy.yml` and `snapshot.yml` fire on *any* push to `main` — so a weekly
+bot commit would redeploy a live site and re-run an archival snapshot for a commit
+that changes no content. The four corpus repos automate this leg because there a
+bot commit is free; here it is not. Closing that needs `paths-ignore: timestamps/**`
+on both site workflows, which is a change to a live deploy path and wants a
+deliberate decision. **Until then: run `./tsa-stamp.sh` by hand after any change to
+a letter, and `./tsa-verify.sh` to check.**
+
+⛔ **The CA trust anchors are part of the leg, not decoration.** `timestamps/ca/*.pem`
+must be present or every reply is discarded with *"REPLY DID NOT VERIFY"* — which
+is what happened on the first run here, when the script was copied and the anchors
+were not. The script is useless without them.
+
 ## ⛔ Not deposited, and that is a decision rather than an omission
 
 The letters carry **no DOI and will not get one at this stage.** The estate's

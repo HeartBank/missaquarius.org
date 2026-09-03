@@ -1,0 +1,93 @@
+name: RFC 3161 trusted timestamps
+
+# The second timestamp leg for the Letters to Miss Aquarius.
+#
+# ⚠️ THIS REPO IS A WEBSITE THAT ALSO HOLDS FIVE DOCUMENTS, and both facts shape
+# this job. Read TIMESTAMPS.md before changing anything here.
+#
+# WHY THE LEG EXISTS. Bitcoin and any other chain fail together on the question
+# that decides the matter: whether the forum accepts a blockchain as evidence.
+# An RFC 3161 timestamp fails for unrelated reasons — it is signed by a named
+# legal authority, is recognised by courts today, and under eIDAS Art. 41 a
+# *qualified* timestamp carries a presumption of the accuracy of its date. What it
+# does NOT have is permanence: its trust anchor expires, and the authority may
+# close. Bitcoin has permanence and no legal standing; a TSA has legal standing
+# and no permanence. Each leg covers precisely the other's weakness. Until
+# 2026-09-03 the Letters had only the first.
+#
+# ⛔⛔ WHAT IS SIGNED HERE IS NOT THE REPOSITORY. Everywhere else in the estate
+# `tsa-stamp.sh` manifests `git ls-files` — every tracked path — which is correct
+# where every tracked file is a document. Here it is scoped to `letters/*.html`,
+# because this repo's own TIMESTAMPS.md rules that stamping every page "would make
+# the proof set meaningless by making it universal." The scope is the doctrine
+# expressed as a pattern. Do not widen it.
+#
+# SCHEDULING. `17 6 * * 0`, matching the estate's convention. There is no
+# OpenTimestamps job in this repo to collide with — leg 1 is run by hand through
+# the `/ots` skill's loop — and neither site workflow commits (`contents: read`),
+# so this is the only job here that writes to the repository.
+#
+# ⭐ IT IS SAFE TO SCHEDULE ONLY BECAUSE OF `paths-ignore`. Every commit this job
+# makes lands in `timestamps/**` and `TIMESTAMPS.md`, which `pages-deploy.yml` and
+# `snapshot.yml` now ignore — otherwise a weekly manifest would redeploy a live
+# site and re-run an archival snapshot for a commit that changes no served byte.
+# ⚠️ Those filters also carry `**/*.ots`, because the OTS proofs are siblings of
+# the letters (`letters/*.html.ots`) rather than living under `timestamps/`. If
+# anyone removes those filters, this job starts redeploying the site weekly.
+#
+# NO SECRETS. Every authority used is free and unauthenticated, and the only
+# credential is the repo-scoped GITHUB_TOKEN. ⛔ But the CA trust anchors in
+# `timestamps/ca/*.pem` ARE required: without them every reply is discarded with
+# "REPLY DID NOT VERIFY", which reads exactly like the authorities being down.
+
+on:
+  schedule:
+    - cron: "17 6 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rfc3161:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Only so tsa-stamp.sh can also lay a Bitcoin stamp on the manifest,
+      # putting both trust models on one artifact. Not required for the TSA leg.
+      - name: Install OpenTimestamps client
+        run: pip install --quiet opentimestamps-client
+
+      - name: Stamp the manifest
+        run: |
+          ./tsa-stamp.sh | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify what was just written
+        run: |
+          {
+            echo ""
+            echo "### Verification"
+            echo '```'
+            ./tsa-verify.sh || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit any changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Nothing to commit." >> "$GITHUB_STEP_SUMMARY"; exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "timestamps: RFC 3161 manifest for $(date -u +%Y-%m-%d)"
+          # Kept even though this is the only committing job here: a human
+          # running ./tsa-stamp.sh by hand can still land something between
+          # checkout and push, and rebasing is cheaper than a failed run.
+          git pull --rebase --autostash
+          git push

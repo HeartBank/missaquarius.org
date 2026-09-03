@@ -30,8 +30,20 @@ which is correct where every tracked file is a document. Here it would do exactl
 what the paragraph above forbids: make the proof set universal, and therefore
 meaningless. The scope *is* the doctrine, expressed in a `git ls-files` pattern.
 
-⚠️ **It is deliberately NOT on a schedule, and that is the open question rather
-than an oversight.** Every workflow in this repo commits, and both
+✅ **The deploy interaction is closed (2026-09-03).** `pages-deploy.yml` and
+`snapshot.yml` now carry `paths-ignore: [timestamps/**, TIMESTAMPS.md, **/*.ots]`,
+so a timestamping commit no longer redeploys the site or re-runs an archival
+snapshot. ⚠️ **The `**/*.ots` entry is the one that is easy to miss: the OTS proofs
+live NEXT TO the letters as `letters/*.html.ots`, so ignoring `timestamps/**` alone
+would have left every OTS upgrade still deploying.** The artifact and its proof are
+siblings on disk, and a filter written from the directory name catches only half.
+⭐ `paths-ignore` skips a push only when *every* changed file matches, so editing a
+letter and rotating its proof in one commit still deploys — which is correct.
+
+⏳ **With that closed, scheduling this leg is now unblocked** and is the remaining
+step to bring this repo in line with the four corpus repos.
+
+⚠️ **Historic note — why it was NOT on a schedule.** Every workflow in this repo commits, and both
 `pages-deploy.yml` and `snapshot.yml` fire on *any* push to `main` — so a weekly
 bot commit would redeploy a live site and re-run an archival snapshot for a commit
 that changes no content. The four corpus repos automate this leg because there a

@@ -6,14 +6,14 @@ name: Prior-art snapshot
 #                            A publish push is about a minute, not ~48.
 #   Run workflow (manual) -> "mode" input: changed (default) or full (whole manifest).
 #
-# ⭐ THE WEEKLY FULL REFRESH NO LONGER RUNS HERE. Since 2026-09-05 it runs in ONE
-# PUBLIC repository, 333eco/snapshot.333.eco, every Sunday, for every host in the
-# estate: it reads each site's LIVE sitemap.xml, every tracked paper in the public
+# ⭐ THE FULL REFRESH NO LONGER RUNS HERE. Since 2026-09-05 it runs in ONE PUBLIC
+# repository, 333eco/snapshot.333.eco, DAILY at 06:00 UTC (weekly until that day),
+# for every host in the estate: it reads each site's LIVE sitemap.xml, every tracked paper in the public
 # corpus repositories, and a short list of extra URLs (redirects, unlisted pages).
 # Actions minutes bill the OWNER of a private repository; the Sunday runs across
 # 22 private repositories cost ~580 minutes a month, and in a public repository
-# they cost nothing. That is a property of where the job runs, not a budget
-# anyone has to watch. It also retires, for this file, the caveat that GitHub
+# they cost nothing — which is also why the cadence could go daily. That is a
+# property of where the job runs, not a budget anyone has to watch. It also retires, for this file, the caveat that GitHub
 # pauses scheduled workflows after 60 days of inactivity: nothing here is scheduled.
 #
 # archive.today and perma.cc resist automation (anti-bot / quota), so the job
@@ -28,18 +28,18 @@ name: Prior-art snapshot
 #         src/pages/home.ts · web/src/index.html   (the homepage "/")
 #   — OR
 #   (b) its line was ADDED to snapshot-urls.txt in the diff range, so a new
-#       page's first capture happens on the push that lists it, not next Sunday.
-# Everything else is SKIPPED and left to the Sunday full run:
+#       page's first capture happens on the push that lists it, not next morning.
+# Everything else is SKIPPED and left to the daily full run:
 #   · raw.githubusercontent.com corpus sources — they live in the publications
 #     repositories and cannot change in a push to THIS one;
-#   · category / index pages with no dedicated file — re-archived weekly.
+#   · category / index pages with no dedicated file — re-archived daily.
 # Until 2026-09-05 those two classes were submitted on EVERY push (110 of
 # thonly.org's 231 URLs), which is what made a "seconds" job take 48 minutes.
 #
 # THE DIFF RANGE is <last completed run of this workflow on this branch>..HEAD,
 # not github.event.before..HEAD. It matters because of the concurrency rule
 # below: when a burst of pushes supersedes a run part-way, the pages it never
-# reached are picked up by the next run instead of waiting a week. "Completed"
+# reached are picked up by the next run instead of waiting for the daily one. "Completed"
 # means success or failure — both ran the submit loop to the end; a cancelled or
 # timed-out run is never a base. With no such run, or one whose commit is not an
 # ancestor of HEAD (force-push, new branch), the base falls back to
@@ -169,7 +169,7 @@ jobs:
             [ "$MODE" = "full" ] && return 1
             local url="$1" p last cand="" c
             case "$url" in
-              *raw.githubusercontent.com/*) return 0 ;;                # corpus source: Sunday only
+              *raw.githubusercontent.com/*) return 0 ;;                # corpus source: daily run only
             esac
             printf '%s\n' "$ADDED" | grep -Fxq "$url" && return 1     # newly listed: first capture now
             p="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z]+://[^/]+##; s#[?#].*$##; s#/+$##')"
@@ -183,7 +183,7 @@ jobs:
                 [ -f "$c" ] && { cand="$c"; break; }
               done
             fi
-            [ -n "$cand" ] || return 0                                 # no dedicated file: Sunday only
+            [ -n "$cand" ] || return 0                                 # no dedicated file: daily run only
             printf '%s\n' "$CHANGED" | grep -Fxq "$cand" && return 1   # its source changed: submit
             return 0                                                   # mapped + unchanged: skip
           }
@@ -192,7 +192,7 @@ jobs:
             echo "## Prior-art snapshot — $(date -u '+%Y-%m-%d %H:%M UTC') — mode: \`$MODE\`"
             echo ""
             echo "Internet Archive submitted automatically. **archive.today** and **perma.cc** are manual (anti-bot / quota) — click the links below per URL."
-            echo "The response code is a heuristic (a 404 has accompanied a successful capture); the authoritative check is the CDX API. The Sunday full run in \`333eco/snapshot.333.eco\` re-archives every page regardless."
+            echo "The response code is a heuristic (a 404 has accompanied a successful capture); the authoritative check is the CDX API. The daily full run in \`333eco/snapshot.333.eco\` re-archives every page regardless."
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -202,7 +202,7 @@ jobs:
             url="$(echo "$raw" | sed 's/#.*//' | xargs)"
             [ -z "$url" ] && continue
             if skip_url "$url"; then
-              echo "Skipped (unchanged, or Sunday-only): $url"
+              echo "Skipped (unchanged, or daily-run-only): $url"
               skipped=$((skipped + 1))
               continue
             fi
@@ -244,11 +244,11 @@ jobs:
       # Two questions, both answered against the sitemap as the authoritative set
       # of public routes:
       #   1. Is every sitemap route in the manifest?  (else: never archived on push)
-      #   2. Would the Sunday full run in 333eco/snapshot.333.eco reach every
+      #   2. Would the daily full run in 333eco/snapshot.333.eco reach every
       #      manifest URL?  It reads the LIVE sitemap, the public corpora and
       #      extra-urls.txt — so a manifest URL that is in none of those (a
-      #      redirect, an unlisted page) is archived by nobody once Sunday moved
-      #      out of this repo. That repository is public, so the check needs no
+      #      redirect, an unlisted page) is archived by nobody once the full run
+      #      moved out of this repo. That repository is public, so the check needs no
       #      token; if it cannot be fetched the check WARNS and does not fail.
       #
       # Runs LAST and with if:always(), so the pages that ARE listed still get
@@ -326,13 +326,13 @@ jobs:
           else:
               out("✅ Every route in the sitemap is in the archive manifest.")
 
-          # 2. Coverage by the Sunday full run.
+          # 2. Coverage by the daily full run.
           try:
               hosts = set(fetch_list("hosts.txt"))
               corpora = fetch_list("corpora.txt")
               extras = {norm(u) for u in fetch_list("extra-urls.txt")}
           except Exception as e:  # network, or the repo moved — warn, never fail on this
-              print(f"::warning::could not read 333eco/snapshot.333.eco ({e}); Sunday coverage not checked")
+              print(f"::warning::could not read 333eco/snapshot.333.eco ({e}); full-run coverage not checked")
               sys.exit(1 if failed else 0)
 
           site_urls = [u for u in manifest if "raw.githubusercontent.com/" not in u]
@@ -347,20 +347,20 @@ jobs:
               and norm(u) not in extras
           )
           out("")
-          out("### Sunday full-run coverage (`333eco/snapshot.333.eco`)")
+          out("### Daily full-run coverage (`333eco/snapshot.333.eco`)")
           out("")
           if host and host not in hosts:
               failed = True
-              out(f"⚠️ **`{host}` is not in `hosts.txt`** — the weekly full run never reads this site's sitemap. Add it.")
+              out(f"⚠️ **`{host}` is not in `hosts.txt`** — the daily full run never reads this site's sitemap. Add it.")
           if uncovered:
               failed = True
-              out(f"⚠️ **{len(uncovered)} manifest URL(s) are in neither the sitemap, a listed corpus, nor `extra-urls.txt`** — nobody re-archives them on Sunday:")
+              out(f"⚠️ **{len(uncovered)} manifest URL(s) are in neither the sitemap, a listed corpus, nor `extra-urls.txt`** — nobody re-archives them in the daily run:")
               out("")
               for u in uncovered:
                   out(f"- `{u}`")
               out("")
               out("Add each to `extra-urls.txt` in `333eco/snapshot.333.eco` (or to the sitemap, if it is a real route).")
           if host in hosts and not uncovered:
-              out(f"✅ `{host}` is listed, and every manifest URL is reachable by the weekly run.")
+              out(f"✅ `{host}` is listed, and every manifest URL is reachable by the daily run.")
           sys.exit(1 if failed else 0)
           DRIFT_EOF

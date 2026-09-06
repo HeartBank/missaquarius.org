@@ -43,8 +43,13 @@ name: Prior-art snapshot
 # not github.event.before..HEAD. It matters because of the concurrency rule
 # below: when a burst of pushes supersedes a run part-way, the pages it never
 # reached are picked up by the next run instead of waiting for the daily one. "Completed"
-# means success or failure — both ran the submit loop to the end; a cancelled or
-# timed-out run is never a base. With no such run, or one whose commit is not an
+# means success or failure; a cancelled or timed-out run is never a base.
+# ⚠️ THAT REST ON AN INVARIANT THE STEP MUST KEEP: a failed run must still have run
+# the submit loop TO THE END, or the URLs it never reached are dropped from the push
+# leg entirely — this base skips past them. It was FALSE from 2026-09-05 until the
+# same day: errexit let a curl timeout abort the loop mid-way while the run was
+# still recorded `failure` and still became the next base. Hence the `|| true` on
+# the submit curl. Anything added to that loop must fail open for the same reason. With no such run, or one whose commit is not an
 # ancestor of HEAD (force-push, new branch), the base falls back to
 # github.event.before; if that is unusable too, the run submits everything.
 #
@@ -219,9 +224,16 @@ jobs:
             if [ -n "${DRY_RUN:-}" ]; then
               code=DRY
             else
+              # `|| true` is LOAD-BEARING. GitHub runs this step as `bash -e`, and the
+              # step's own `set -uo pipefail` adds options without clearing errexit —
+              # so a curl timeout (exit 28, routine when Save Page Now is slow) killed
+              # the whole step mid-loop until 2026-09-05, and the `${code:-000}` line
+              # below, written to absorb exactly that, was never reached. Submission is
+              # fail-open BY DESIGN: the response code is a heuristic, the CDX API is
+              # authoritative, and the daily full run re-archives everything regardless.
               code="$(curl -s -L -m 30 -o /dev/null -w '%{http_code}' \
                 -A 'HeartBank-snapshot-bot (+https://heartbank.net)' \
-                "https://web.archive.org/save/$url")"
+                "https://web.archive.org/save/$url" || true)"
               code="${code:-000}"   # a timeout already prints 000; never double it
             fi
             echo "  Internet Archive HTTP $code"

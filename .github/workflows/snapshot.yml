@@ -186,17 +186,40 @@ jobs:
             esac
             printf '%s\n' "$ADDED" | grep -Fxq "$url" && return 1     # newly listed: first capture now
             p="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z]+://[^/]+##; s#[?#].*$##; s#/+$##')"
+            # CANDIDATE ORDER IS MOST-SPECIFIC FIRST, and the last two are the
+            # flat-static-site forms. The estate runs FOUR page layouts and this
+            # list knew two of them until 2026-09-06: `src/pages/<name>/index.ts`
+            # (thank.heartbank.org, 43 page directories) and repo-root HTML
+            # (missaquarius.org's letters, missaquarius.com) matched nothing, so
+            # every one of their URLs sat outside the push leg.
+            # ⛔ PATH-DERIVED ONLY — never a bare root index.html fallback for a
+            # non-root URL. On a SPA that maps every route to the shell: a push
+            # touching index.html would re-archive everything and a push touching
+            # the real component would archive nothing.
             if [ -z "$p" ]; then
-              for c in src/pages/home.ts web/src/index.html; do
+              for c in src/pages/home.ts src/pages/home/index.ts web/src/index.html index.html; do
                 [ -f "$c" ] && { cand="$c"; break; }
               done
             else
               last="${p##*/}"
-              for c in "web/src${p}/index.html" "src/pages${p}.ts" "src/pages/content/${last}.ts"; do
+              rel="${p#/}"
+              for c in "web/src${p}/index.html" "src/pages${p}.ts" "src/pages${p}/index.ts" \
+                       "src/pages/content/${last}.ts" "$rel" "$rel/index.html"; do
                 [ -f "$c" ] && { cand="$c"; break; }
               done
             fi
-            [ -n "$cand" ] || return 0                                 # no dedicated file: daily run only
+            # ⭐ RECORD THE FACT, not the policy. A URL with no dedicated source
+            # file is invisible to this leg, and nothing ever said which ones —
+            # /research/program sat outside it for months because its component
+            # is research-program.ts against a path-mirrored lookup. The drift
+            # step below decides which of these are INTENDED (a `# daily` marker
+            # in the manifest) and reports the rest.
+            # ⚠️ `|| true`: the header's invariant is that this loop must run to
+            # the end even when something in it fails. Anything added here fails open.
+            if [ -z "$cand" ]; then
+              printf '%s\n' "$url" >> "${RUNNER_TEMP:-/tmp}/unmapped.txt" 2>/dev/null || true
+              return 0                                                 # no dedicated file: daily run only
+            fi
             printf '%s\n' "$CHANGED" | grep -Fxq "$cand" && return 1   # its source changed: submit
             return 0                                                   # mapped + unchanged: skip
           }
@@ -329,6 +352,50 @@ jobs:
           out("")
           out(f"`{sitemap}` declares **{len(routes)}** public routes; "
               f"`snapshot-urls.txt` lists **{len(manifest)}** URLs.")
+          out("")
+
+          # ── routes the PUSH leg cannot see ──────────────────────────────────
+          # The submit step recorded every URL it found no dedicated source file
+          # for. That is a FACT about the tree; whether it is a PROBLEM is a
+          # policy, and the policy lives in the manifest: a line carrying a
+          # `# daily` comment declares that it has no source file BY DESIGN — a
+          # category or index page rendered by a shared component, re-archived by
+          # the daily full run.
+          #
+          # ⚠️ Reported, never failed. These URLs are still archived daily; red
+          # is reserved for a sitemap route missing from the manifest entirely.
+          # ⛔ `# daily` means "intentionally has no dedicated file", never
+          # "nobody looked". Marking a fixable mapping gap silences the only
+          # instrument that would have found it.
+          unmapped_path = os.path.join(os.environ.get("RUNNER_TEMP", "/tmp"), "unmapped.txt")
+          intentional = {
+              line.split("#")[0].strip()
+              for line in MANIFEST.read_text().splitlines()
+              if "#" in line and "daily" in line.split("#", 1)[1]
+          }
+          try:
+              recorded = [l.strip() for l in open(unmapped_path) if l.strip()]
+          except OSError:
+              recorded = None
+
+          if recorded is None:
+              out("_Push-leg mapping not computed on this run (full mode, or the "
+                  "submit step did not reach the loop)._")
+          else:
+              surprises = sorted(set(recorded) - intentional)
+              if surprises:
+                  out(f"⚠️ **{len(surprises)} listed URL(s) have no source file the push "
+                      "leg can watch**, so they are archived only by the daily run:")
+                  out("")
+                  for u in surprises:
+                      out(f"- {u}")
+                  out("")
+                  out("Either rename the page onto the path mirror "
+                      "(`src/pages<url-path>.ts`), or append `# daily` to its manifest "
+                      "line to say the absence is intended.")
+              else:
+                  out(f"Push-leg mapping: every listed URL is either watched or marked "
+                      f"`# daily` ({len(intentional)} marked).")
           out("")
 
           failed = False

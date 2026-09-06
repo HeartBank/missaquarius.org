@@ -1,0 +1,29 @@
+name: Letters
+
+# Runs scripts/check-letters.mjs on every push and pull request.
+#
+# The letters are the founder's own hand and have no review lane, so this is
+# not the corpus checkers' status rule. It is a PRESENCE guard: each letter
+# must carry the eight properties the estate's provenance and discovery legs
+# depend on (the scaffold banner or the founder-revised marker, canonical,
+# JSON-LD date, CC0, an .ots proof, and entries in the sitemap, the letters
+# index and the snapshot list). On 2026-09-05 all five letters had all eight;
+# this guards the sixth, and the moment a banner comes down.
+#
+# On push and not on a schedule, like the corpus guards: a rule checked a week
+# after the commit lands is a rule that has already been broken.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  letters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Every letter carries its eight properties
+        run: node scripts/check-letters.mjs

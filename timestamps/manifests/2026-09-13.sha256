@@ -1,0 +1,17 @@
+# repository manifest — 2026-09-13 (UTC)
+# sha256  path
+b1cd0f8d52a495e965f3f00d9ed5fd41e27714278d32b3efeb3a1d96433fbb7b  letters/fifth.html
+d717f387d08e3cf646d33eb8de2539e93d5e9f46d6e2c42b00e98bb689486307  letters/first.html
+7294c849344b02768000cc1dbfb103b13a704fe3cab640033ccdbd0f5d8187cb  letters/fourth.html
+bc3091bbc7f25c8441adc2882807d40b2d16b3edbb30000f0e0500b9e039dfad  letters/second.html
+be8310367362c5982c3f079d27571f35d7bb821ba8b1710641e38f23da1f4ec4  letters/third.html
+911de0afc3a114a9bdfe3c018d72ca4448e225ab50ec84beac674ea62b0a1dc2  timestamps/manifests/2026-09-03.sha256
+713743715dcdfad18bbbebcb960a2e6600d09a5c659ddabec97d2b594c33467c  timestamps/manifests/2026-09-03.sha256.accv-es.tsr
+ad043d4a7de1936730ea830d806124fad041bfa5bbb779a52e4a54dc79a7fd39  timestamps/manifests/2026-09-03.sha256.aped-gr.tsr
+7257ff456de36a2ee6152fe2ab60fc3e467bf9ea5f7ee9b2bf47b86982d92c0e  timestamps/manifests/2026-09-03.sha256.freetsa-de.tsr
+5331417f3b0f253437c8f990389fdc8949ea49ad4e6079f92c6da9baa6029d35  timestamps/manifests/2026-09-03.sha256.ots
+80106ca521fe022a53d03e653d07527403f2490dfe5abcc0d1eab32ca6eb3429  timestamps/manifests/2026-09-06.sha256
+dfc7b399a48de7de89863472d2a97981f8f4ac55dba8047a387b81e2d8c6db3c  timestamps/manifests/2026-09-06.sha256.accv-es.tsr
+fa0cd115d0e86d8d5f57c6cf1677d5aaf51cca382d16885fe5975056008b77e3  timestamps/manifests/2026-09-06.sha256.aped-gr.tsr
+25ac745cc557abd50d9ed49e7bfb0ad1bd99550575cfd1552dc7b525426a4ba7  timestamps/manifests/2026-09-06.sha256.freetsa-de.tsr
+e92c95199cfcf4fff3ef898f2c5243c673892f67e501bbb7d54af18132a216da  timestamps/manifests/2026-09-06.sha256.ots

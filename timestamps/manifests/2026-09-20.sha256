@@ -1,0 +1,22 @@
+# repository manifest — 2026-09-20 (UTC)
+# sha256  path
+802356a9861276fbf41d4c17056f27c10baac5f3d1b5c46e54f3fd5eb8fcfc5f  letters/fifth.html
+e57cca631a6928493508cbf2b129e3fb2933f37cbbfe5e67e9b9b5779240b064  letters/first.html
+ed00968fa2b061bd04695f7b081a21b926b7c87853a57eb5e5c44a11a748addb  letters/fourth.html
+3d2921ecdbc8b72237f722be2e2b68a9e0baf41cf5f641c35184a1330127079b  letters/second.html
+69326c3a78fa2d9624be9d56a8fe07fcf6aeb2582558d256fcd4d8941b5ed63a  letters/third.html
+911de0afc3a114a9bdfe3c018d72ca4448e225ab50ec84beac674ea62b0a1dc2  timestamps/manifests/2026-09-03.sha256
+713743715dcdfad18bbbebcb960a2e6600d09a5c659ddabec97d2b594c33467c  timestamps/manifests/2026-09-03.sha256.accv-es.tsr
+ad043d4a7de1936730ea830d806124fad041bfa5bbb779a52e4a54dc79a7fd39  timestamps/manifests/2026-09-03.sha256.aped-gr.tsr
+7257ff456de36a2ee6152fe2ab60fc3e467bf9ea5f7ee9b2bf47b86982d92c0e  timestamps/manifests/2026-09-03.sha256.freetsa-de.tsr
+5331417f3b0f253437c8f990389fdc8949ea49ad4e6079f92c6da9baa6029d35  timestamps/manifests/2026-09-03.sha256.ots
+80106ca521fe022a53d03e653d07527403f2490dfe5abcc0d1eab32ca6eb3429  timestamps/manifests/2026-09-06.sha256
+dfc7b399a48de7de89863472d2a97981f8f4ac55dba8047a387b81e2d8c6db3c  timestamps/manifests/2026-09-06.sha256.accv-es.tsr
+fa0cd115d0e86d8d5f57c6cf1677d5aaf51cca382d16885fe5975056008b77e3  timestamps/manifests/2026-09-06.sha256.aped-gr.tsr
+25ac745cc557abd50d9ed49e7bfb0ad1bd99550575cfd1552dc7b525426a4ba7  timestamps/manifests/2026-09-06.sha256.freetsa-de.tsr
+e92c95199cfcf4fff3ef898f2c5243c673892f67e501bbb7d54af18132a216da  timestamps/manifests/2026-09-06.sha256.ots
+cd288f201cb3859ff8af817d80491d6b860e3ea0e5ed1367c8ef65ce7dff740d  timestamps/manifests/2026-09-13.sha256
+7ab3cba06cf1da1afa41edf03b45cfb11f6fff7c0cfddd3e3123b6f69cd592dd  timestamps/manifests/2026-09-13.sha256.accv-es.tsr
+bcc513a0c404fbe404d3b514aaea8022a66215a1ca277ef14c1f4b1d5018d416  timestamps/manifests/2026-09-13.sha256.aped-gr.tsr
+ffb272eed348ba134346d100ecfd4c1a0b358d2a52719752b161d6a422267124  timestamps/manifests/2026-09-13.sha256.freetsa-de.tsr
+c11bafc54c2f79e44376ab0154297d0941f70723a9adeabb1c4264766a575466  timestamps/manifests/2026-09-13.sha256.ots

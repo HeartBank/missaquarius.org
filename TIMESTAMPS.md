@@ -89,3 +89,4 @@ is the point.
 | Date | File | Revision | Note |
 | --- | --- | --- | --- |
 | 2026-09-01 | `letters/*.html` | r0 | First stamp. Scaffold state, pre-revision. |
+| 2026-09-19 | `letters/*.html` | r1 | **The banner, not the letter.** Every banner said the letter *"awaits his revision in his own voice **before publication**"* while the letter was published — live, canonical, in `sitemap.xml`, stamped, and in the Internet Archive. Honest about authorship, false about state. All five now read *"The letter is published as a draft in the meantime."* ⛔ **The prose is untouched and the scaffold state is unchanged:** `check-letters.mjs` still reports 5 scaffold · 0 founder-revised, and his revision remains one commit away. The r0 proofs above continue to attest the earlier wording, which is why they are kept. Roadmap A173. |

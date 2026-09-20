@@ -4,10 +4,14 @@
 //
 //   node scripts/check-letters.mjs          verify every letters/*.html
 //
-// WHY THIS EXISTS. The letters are the founder's own hand — the one public genre
-// where his voice is load-bearing — so they have no review lane and no
-// draft/published status; the corpus checkers' status rule would misdescribe
-// them. What they DO carry is a set of properties every letter must have for
+// WHY THIS EXISTS. The letters are the one public genre where the founder's voice
+// is load-bearing — his own hand, per the ratified author-voice rule — so they
+// have no review lane and no draft/published status; the corpus checkers' status
+// rule would misdescribe them. ⚠️ As of 2026-09-19 that rule describes the
+// DESTINATION and not the state: all five are substrate-drafted scaffold, and
+// this comment asserted the destination as though it were the fact for two weeks
+// while the counter below said 5 scaffold. A comment is not a check; property 9
+// is the part that can fail. What they DO carry is a set of properties every letter must have for
 // the estate's provenance and discovery legs to see it, and on 2026-09-05 all
 // five letters had all of them. A guard here therefore protects the SIXTH
 // letter: a new file dropped into letters/ with a property missing is invisible
@@ -24,6 +28,7 @@
 //   6. an entry in sitemap.xml
 //   7. a link from letters/index.html
 //   8. a line in snapshot-urls.txt (the Internet Archive leg)
+//   9. a scaffold banner that does not contradict the file's own published state
 //
 // ⭐ THE BANNER IS A STATE, NOT A FIXTURE. Each letter's banner says "this banner
 // comes down when the letter does" — it marks connective prose that is still
@@ -86,6 +91,20 @@ for (const file of letters) {
     } else {
         states[banner ? "scaffold" : "revised"]++;
     }
+
+    // 9. The banner may not describe a state the file has left.
+    //
+    // Every banner read "awaits his revision in his own voice BEFORE PUBLICATION"
+    // while the letter was published: live, canonical, sitemapped, OTS-stamped and
+    // fed to the Internet Archive. The XOR above cannot see it — a scaffold letter
+    // is a legitimate state and this one was correctly marked. What was false was
+    // the banner's account of where the file stood. So the assertion is not about
+    // the banner alone but about the banner AGAINST the listing: once a letter is
+    // in sitemap.xml it IS published, and a banner may not say otherwise.
+    if (banner && /before\s+publication/i.test(html) && sitemap.includes(`<loc>${url}</loc>`))
+        fail('banner says the letter awaits revision "before publication" while the letter is in sitemap.xml.',
+            "a published draft is a draft that is published — say so ('published as a draft in the\n" +
+            "           meantime'), or take the letter out of sitemap.xml, index.html and snapshot-urls.txt.");
 
     // 2. Canonical, pointing at itself.
     const canon = head.match(/<link\s+rel="canonical"\s+href="([^"]+)"/);

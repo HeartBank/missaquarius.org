@@ -1,0 +1,54 @@
+{
+ "about": "The screens the Khmer review's screenshots are taken from: this site's own files served locally, each Khmer page and its footer, most typical first (the FIRST screen that shows an entry keeps it).",
+ "base": "http://localhost:4351",
+ "viewport": {
+  "width": 390,
+  "height": 844
+ },
+ "stamp": {
+  "register": "M-0025",
+  "rights": "reserved",
+  "disclosure": "https://demo.missaquarius.org/khmer/missaquarius.org/"
+ },
+ "states": [
+  {
+   "id": "home",
+   "url": "/km/",
+   "ready": "main",
+   "settle": 1500
+  },
+  {
+   "id": "home-footer",
+   "url": "/km/",
+   "ready": "main",
+   "eval": "window.scrollTo(0, document.body.scrollHeight)",
+   "settle": 1200
+  },
+  {
+   "id": "bodhisattva",
+   "url": "/km/bodhisattva.html",
+   "ready": "main",
+   "settle": 1500
+  },
+  {
+   "id": "bodhisattva-footer",
+   "url": "/km/bodhisattva.html",
+   "ready": "main",
+   "eval": "window.scrollTo(0, document.body.scrollHeight)",
+   "settle": 1200
+  },
+  {
+   "id": "letters",
+   "url": "/km/letters/",
+   "ready": "main",
+   "settle": 1500
+  },
+  {
+   "id": "letters-footer",
+   "url": "/km/letters/",
+   "ready": "main",
+   "eval": "window.scrollTo(0, document.body.scrollHeight)",
+   "settle": 1200
+  }
+ ]
+}

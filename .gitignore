@@ -1,1 +1,3 @@
 .DS_Store
+# /khmer-review: the adapter writes here (scripts/khmer-strings.mjs); never deployed
+staging/

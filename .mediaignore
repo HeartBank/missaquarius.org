@@ -1,0 +1,6 @@
+# The three icons are the B-Emblem's canonical PATH as SVG markup (brand.333.eco emblem.path.txt) — source, not a rendered
+# picture — and SVG has no packet the media stamp can write (the precedent: thank.heartbank.ceo's emblem.svg). The rendered
+# link-preview card, og.png, is stamped (register M-0004) by thonly.org's scripts/make-og-card.mjs.
+icon.svg
+icon2.svg
+icon-maskable.svg

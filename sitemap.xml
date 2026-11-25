@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://missaquarius.org/</loc><lastmod>2026-05-22</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://missaquarius.org/bodhisattva.html</loc><lastmod>2026-05-22</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://missaquarius.org/letters/</loc><lastmod>2026-06-09</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://missaquarius.org/</loc><lastmod>2026-11-24</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://missaquarius.org/bodhisattva.html</loc><lastmod>2026-11-24</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://missaquarius.org/letters/</loc><lastmod>2026-11-24</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://missaquarius.org/letters/first.html</loc><lastmod>2026-05-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://missaquarius.org/letters/second.html</loc><lastmod>2026-05-25</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://missaquarius.org/letters/third.html</loc><lastmod>2026-06-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://missaquarius.org/letters/fourth.html</loc><lastmod>2026-06-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://missaquarius.org/letters/fifth.html</loc><lastmod>2026-06-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://missaquarius.org/km/</loc><lastmod>2026-11-24</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://missaquarius.org/km/bodhisattva.html</loc><lastmod>2026-11-24</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://missaquarius.org/km/letters/</loc><lastmod>2026-11-24</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>

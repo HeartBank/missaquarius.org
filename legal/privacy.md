@@ -1,6 +1,6 @@
 # Privacy policy
 
-Draft of 25 November 2026.
+Draft of 26 November 2026.
 
 This policy covers missaquarius.org and every page on it, the Letters included. It is run by the organization that will be named in the final version. **Contact:** miss.aquarius@heartbank.ceo
 
@@ -38,4 +38,4 @@ This site's own code sets no cookies.
 
 ## Changes
 
-A change to this policy is a new version with its own date line.
+A change is a new version with its own date, published at legal.333.eco, where every version stays.

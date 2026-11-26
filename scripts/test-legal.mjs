@@ -9,7 +9,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync } from "node:f
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { check, missingFromPage } from "./gen-legal.mjs";
+import { check, missingFromPage, RULED } from "./gen-legal.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 let failed = 0, passed = 0;
@@ -84,13 +84,37 @@ for (const [name, from, to, re] of [
     ["Miss Aquarius as a party", "It is run by the organization that will be named in the final version.", "It is run by Miss Aquarius.", /names Miss Aquarius/],
     ['"the estate"', "This policy covers", "This policy for the estate covers", /says "the estate"/],
     ['"sign in"', "no log-in", "no sign-in", /says "sign in"/],
-    ["the date line", "Draft of 25 November 2026.", "Drafted 25 November 2026.", /line 3 must read/],
+    ["the date line", "Draft of 26 November 2026.", "Drafted 26 November 2026.", /line 3 must read/],
+    ["an old Changes sentence", RULED.changes, "A change to this policy is a new version with its own date line.", /must open with the ruled promise/],
 ]) {
     const d = copy(), f = join(d, "legal/privacy.md");
     writeFileSync(f, readFileSync(f, "utf8").replace(from, to));
     const p = check(d);
     ok(`the check refuses ${name}`, has(p, re), p.join(" | "));
     rmSync(d, { recursive: true });
+}
+
+// 7. The shared clauses in the frame (rule 7): the old banner, and a page without the AI line, in each language.
+for (const [file, lang, oldBanner] of [
+    ["privacy/index.html", "en", "This is a draft. No lawyer has reviewed it, and it may change before it is final."],
+    ["km/privacy/index.html", "km", "នេះជាសេចក្តីព្រាង។ មិនទាន់មានមេធាវីណាពិនិត្យវានៅឡើយទេ ហើយវាអាចផ្លាស់ប្តូរ មុនពេលវាជាកំណែចុងក្រោយ។"],
+]) {
+    const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = (name) => new RegExp(`^${esc(file)}: the frame does not carry the ${name}`);
+    {
+        const d = copy(), f = join(d, file);
+        writeFileSync(f, readFileSync(f, "utf8").replace(RULED[lang].banner, oldBanner));
+        const p = check(d);
+        ok(`${file}: the old banner in place of the ruled one is named`, has(p, re("ruled draft banner")), p.join(" | "));
+        rmSync(d, { recursive: true });
+    }
+    {
+        const d = copy(), f = join(d, file);
+        writeFileSync(f, readFileSync(f, "utf8").replace(RULED[lang].ai, ""));
+        const p = check(d);
+        ok(`${file}: a page without the AI line is named`, has(p, re("AI line")), p.join(" | "));
+        rmSync(d, { recursive: true });
+    }
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -16,6 +16,9 @@
 //   4. the Khmer names the sha256 of the English it translates: an English edit leaves the Khmer visibly STALE, never silently
 //   5. every page with a footer links to the policy in its own language (the five Letters excepted: timestamped, never edited)
 //   6. the text never names Miss Aquarius as a party, never says "the estate", never "sign in"
+//   7. the shared clauses, word for word (founder 2026-11-26, "approve all"; legal.333.eco §clause-rulings): each page's frame
+//      carries the ruled draft banner and, beside it, the AI line, in the page's language; the English text's Changes section
+//      opens with the ruled promise
 //
 // The style, the head's icons and the footer are read from the site's own front page in the same language, so the policy page
 // looks like the site and follows it: change the front page, run this, and the policy page comes along.
@@ -88,15 +91,38 @@ export function missingFromPage(mdText, html) {
     return pieces.map((x) => plain(x.trim())).filter((l) => l.length > 0).filter((l) => !pageKey.includes(key(l)));
 }
 
+// The shared clauses' ruled wordings (rule 7). The banner and the AI line are the frame's, never the text's (so never in a
+// published version, and never a party: rule 6 reads only the text); the Changes promise is the English text's own.
+export const RULED = {
+    en: {
+        banner: "A draft, not yet reviewed by a lawyer. It may change before the final version.",
+        ai: "Drafted with Miss Aquarius℠, an AI",
+    },
+    km: {
+        banner: "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។ អត្ថបទច្បាប់មានតែជាភាសាអង់គ្លេសប៉ុណ្ណោះ។",
+        ai: "រៀបចំជាមួយ Miss Aquarius℠ ដែលជា AI",
+    },
+    changes: "A change is a new version with its own date, published at legal.333.eco, where every version stays.",
+};
+export function clauseProblems(file, html, lang) {
+    const out = [], text = pageText(html), r = RULED[lang];
+    if (!text.includes(r.banner)) out.push(`${file}: the frame does not carry the ruled draft banner: "${r.banner}"`);
+    if (!text.includes(r.ai)) out.push(`${file}: the frame does not carry the AI line: "${r.ai}"`);
+    else if (text.indexOf(r.ai) < text.indexOf(r.banner)) out.push(`${file}: the AI line is not beside the banner (it comes before it)`);
+    return out;
+}
+
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 const PIN = /^<!-- Khmer: OUR DRAFT of legal\/privacy\.md sha256 ([0-9a-f]{64}), awaiting a native reader \(\/khmer-review\)\. -->$/;
 
-// The words around the text, outside it. The Khmer is ours and marked (the page's draft line and the footer's).
+// The words around the text, outside it. The Khmer is ours and marked (the page's draft line and the footer's). The banner and
+// the AI line are the shared clauses' ruled wordings (2026-11-26), the Khmer included; rule 7 holds them to RULED.
 const FRAME = {
     en: {
         lang: "en", path: "/privacy/", home: "/", title: (h) => `Privacy policy · ${h}`,
         desc: (h) => `What ${h} keeps about a visit, and who else handles it.`,
-        banner: "This is a draft. No lawyer has reviewed it, and it may change before it is final.",
+        banner: "A draft, not yet reviewed by a lawyer. It may change before the final version.",
+        ai: "Drafted with Miss Aquarius℠, an AI",
         note: "",
         versions: "Every version of this document, timestamped:",
         versionsAfter: "",
@@ -104,7 +130,8 @@ const FRAME = {
     km: {
         lang: "km", path: "/km/privacy/", home: "/km/", title: (h) => `គោលការណ៍ឯកជនភាព · ${h}`,
         desc: (h) => `អ្វីដែល ${h} រក្សាទុកអំពីការចូលមើល និងអ្នកផ្សេងទៀតដែលដោះស្រាយវា។`,
-        banner: "នេះជាសេចក្តីព្រាង។ មិនទាន់មានមេធាវីណាពិនិត្យវានៅឡើយទេ ហើយវាអាចផ្លាស់ប្តូរ មុនពេលវាជាកំណែចុងក្រោយ។",
+        banner: "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។ អត្ថបទច្បាប់មានតែជាភាសាអង់គ្លេសប៉ុណ្ណោះ។",
+        ai: "រៀបចំជាមួយ Miss Aquarius℠ ដែលជា AI",
         note: `<p class="draft draft-note" lang="km">[ ភាសាខ្មែរនេះជាសេចក្តីព្រាងរបស់យើង រង់ចាំការពិនិត្យពីអ្នកភាសាខ្មែរ។ អត្ថបទភាសាអង់គ្លេសនៅ <a href="/privacy/" hreflang="en" lang="en">/privacy/</a> គឺជាអត្ថបទដែល legal.333.eco រក្សាទុកគ្រប់កំណែ។ ]</p>`,
         versions: "គ្រប់កំណែនៃឯកសារនេះ ដែលមានត្រាពេលវេលា៖",
         versionsAfter: " (ជាភាសាអង់គ្លេស)",
@@ -171,7 +198,7 @@ export function render(root) {
     <body>
         <main>
             <p class="back"><a href="${f.home}">${esc(host)}</a></p>
-            <p class="draft-band" role="note">${f.banner}</p>
+            <p class="draft-band" role="note">${f.banner}<br />${f.ai}</p>
             ${f.note}
             <div class="legal">
 ${md(text)}
@@ -220,6 +247,7 @@ export function check(root) {
         const missing = missingFromPage(file.startsWith("km/") ? km : en, have);
         for (const l of missing) problems.push(`${file}: a line of the markdown is not on the page: ${l.slice(0, 90)}`);
         if (!have.includes(`https://legal.333.eco/${readFileSync(join(root, "CNAME"), "utf8").trim()}/privacy/`)) problems.push(`${file}: no link to its page at legal.333.eco`);
+        problems.push(...clauseProblems(file, have, file.startsWith("km/") ? "km" : "en"));
     }
     for (const f of footerPages(root)) {
         const html = readFileSync(join(root, f), "utf8");
@@ -228,6 +256,7 @@ export function check(root) {
         const href = f.startsWith("km/") ? "/km/privacy/" : "/privacy/";
         if (!foot.includes(`href="${href}"`)) problems.push(`${f}: its footer does not link to ${href}`);
     }
+    if (!en.includes(`\n## Changes\n\n${RULED.changes}\n`)) problems.push(`legal/privacy.md: its "## Changes" section must open with the ruled promise: "${RULED.changes}"`);
     for (const [name, text] of [["legal/privacy.md", en], ["legal/privacy.km.md", km]]) {
         if (/Miss Aquarius/i.test(text)) problems.push(`${name}: names Miss Aquarius — no page names her as a party (founder 2026-11-24); name the operator, or "the organization that will be named in the final version"`);
         if (/\bthe estate\b/i.test(text)) problems.push(`${name}: says "the estate" — never in a legal text; name the entity`);

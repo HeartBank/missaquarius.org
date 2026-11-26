@@ -102,7 +102,8 @@ export const RULED = {
         banner: "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។ អត្ថបទច្បាប់មានតែជាភាសាអង់គ្លេសប៉ុណ្ណោះ។",
         ai: "រៀបចំជាមួយ Miss Aquarius℠ ដែលជា AI",
     },
-    changes: "A change is a new version with its own date, published at legal.333.eco, where every version stays.",
+    // Reworded the same day (founder 2026-11-26, "Reword it everywhere"): "a new version" is barred as a novelty claim.
+    changes: "Each change is published as its own version with its own date, at legal.333.eco, where every version stays.",
 };
 export function clauseProblems(file, html, lang) {
     const out = [], text = pageText(html), r = RULED[lang];

@@ -38,4 +38,4 @@ This site's own code sets no cookies.
 
 ## Changes
 
-A change is a new version with its own date, published at legal.333.eco, where every version stays.
+Each change is published as its own version with its own date, at legal.333.eco, where every version stays.

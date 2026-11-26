@@ -86,6 +86,7 @@ for (const [name, from, to, re] of [
     ['"sign in"', "no log-in", "no sign-in", /says "sign in"/],
     ["the date line", "Draft of 26 November 2026.", "Drafted 26 November 2026.", /line 3 must read/],
     ["an old Changes sentence", RULED.changes, "A change to this policy is a new version with its own date line.", /must open with the ruled promise/],
+    ["the withdrawn Changes sentence", RULED.changes, "A change is a new version with its own date, published at legal.333.eco, where every version stays.", /must open with the ruled promise/],
 ]) {
     const d = copy(), f = join(d, "legal/privacy.md");
     writeFileSync(f, readFileSync(f, "utf8").replace(from, to));

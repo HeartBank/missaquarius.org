@@ -1,4 +1,4 @@
-<!-- Khmer: OUR DRAFT of legal/privacy.md sha256 8304854e2ed8dfcd4519b4b1aaead01472c45f3997bd2db06b5318b7824ac78e, awaiting a native reader (/khmer-review). -->
+<!-- Khmer: OUR DRAFT of legal/privacy.md sha256 0f3b01bcc34c3b86cb1d9ac30a69eb8eaefb4b1bc38f0aeeb6893fca8c350e3f, awaiting a native reader (/khmer-review). -->
 
 # គោលការណ៍ឯកជនភាព
 
@@ -40,4 +40,4 @@
 
 ## ការផ្លាស់ប្តូរ
 
-ការផ្លាស់ប្តូរមួយ គឺជាកំណែថ្មីមួយដែលមានកាលបរិច្ឆេទផ្ទាល់របស់វា ដែលបោះផ្សាយនៅ legal.333.eco ជាកន្លែងដែលគ្រប់កំណែនៅតែរក្សាទុក។
+ការផ្លាស់ប្តូរនីមួយៗ ត្រូវបានបោះផ្សាយជាកំណែផ្ទាល់របស់វា ដែលមានកាលបរិច្ឆេទផ្ទាល់របស់វា នៅ legal.333.eco ជាកន្លែងដែលគ្រប់កំណែនៅតែរក្សាទុក។

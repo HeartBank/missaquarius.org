@@ -2,7 +2,7 @@
 // The privacy policy: ONE source, legal/privacy.md, rendered into /privacy/ (and its Khmer twin, legal/privacy.km.md, into
 // /km/privacy/). legal.333.eco publishes every version of legal/privacy.md, timestamped, and refuses one whose words this site
 // does not serve. Founder 2026-11-24: "no page names Miss Aquarius as a party"; her sites get a privacy page naming whoever
-// actually runs them (MA memory project_legal_pages §ruling item 5; /build Default 24). Founder 2026-11-25: fix the list.
+// actually runs them. Founder 2026-11-25: fix the list.
 // The Khmer is ours, marked as a draft, by the founder's 2026-11-24 ruling for this site ("translate all English texts to khmer").
 //
 //   node scripts/gen-legal.mjs           write privacy/index.html and km/privacy/index.html from legal/

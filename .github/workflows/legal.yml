@@ -1,0 +1,24 @@
+name: Legal
+
+# Runs scripts/gen-legal.mjs --check and its controls on every push and pull request.
+#
+# The privacy policy has ONE source, legal/privacy.md (its Khmer, ours, in legal/privacy.km.md), rendered into /privacy/ and
+# /km/privacy/. legal.333.eco publishes every version of legal/privacy.md and refuses one whose words this site does not serve,
+# so a hand-edited page, a stale render, a stale Khmer or a footer without the link must fail here first (MA /build Default 24).
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  legal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: The privacy pages are rendered from legal/ and every footer links to them
+        run: node scripts/gen-legal.mjs --check
+      - name: The check sees each break (controls)
+        run: node scripts/test-legal.mjs

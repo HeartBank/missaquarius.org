@@ -11,3 +11,5 @@ https://missaquarius.org/letters/fifth.html
 https://missaquarius.org/km/
 https://missaquarius.org/km/bodhisattva.html
 https://missaquarius.org/km/letters/
+https://missaquarius.org/privacy/
+https://missaquarius.org/km/privacy/

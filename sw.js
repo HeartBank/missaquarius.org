@@ -2,7 +2,7 @@
 // Caches the two pages and the icon/manifest at install time; serves from
 // cache when available, falls back to network. Bump CACHE on content changes.
 
-const CACHE = "missaquarius-org-v5";
+const CACHE = "missaquarius-org-v6";
 const ASSETS = [
     "/",
     "/bodhisattva.html",

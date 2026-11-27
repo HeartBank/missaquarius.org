@@ -1,0 +1,107 @@
+{
+    "$comment": [
+        "The ruled wordings of the shared legal clauses, published by legal.333.eco at https://legal.333.eco/clauses.json.",
+        "Generated from legal.333.eco's clauses; never edit a copy: a service's scripts/check-clauses.mjs fails on any edit.",
+        "An id is <clause>/<lang>, or <clause>/<lang>@<host> for the form that host carries instead (`instead`) or alone.",
+        "`then` names the slot that follows the text, which is each service's own (the bank's rail clause, a service's own Changes sentences)."
+    ],
+    "version": "2026-11-26-0ff370",
+    "wordings": {
+        "ai-disclosure/en": {
+            "clause": "ai-disclosure",
+            "lang": "en",
+            "host": null,
+            "text": "Drafted with Miss Aquarius℠, an AI"
+        },
+        "ai-disclosure/km": {
+            "clause": "ai-disclosure",
+            "lang": "km",
+            "host": null,
+            "text": "រៀបចំជាមួយ Miss Aquarius℠ ដែលជា AI",
+            "khmer": "ours, a draft awaiting a native reader"
+        },
+        "changes/en": {
+            "clause": "changes",
+            "lang": "en",
+            "host": null,
+            "text": "Each change is published as its own version with its own date, at legal.333.eco, where every version stays.",
+            "then": "then"
+        },
+        "changes/km@missaquarius.org": {
+            "clause": "changes",
+            "lang": "km",
+            "host": "missaquarius.org",
+            "text": "ការផ្លាស់ប្តូរនីមួយៗ ត្រូវបានបោះផ្សាយជាកំណែផ្ទាល់របស់វា ដែលមានកាលបរិច្ឆេទផ្ទាល់របស់វា នៅ legal.333.eco ជាកន្លែងដែលគ្រប់កំណែនៅតែរក្សាទុក។",
+            "khmer": "ours, a draft awaiting a native reader"
+        },
+        "changes/km@missaquarius.com": {
+            "clause": "changes",
+            "lang": "km",
+            "host": "missaquarius.com",
+            "text": "ការផ្លាស់ប្តូរនីមួយៗ ត្រូវបានបោះផ្សាយជាកំណែផ្ទាល់របស់វា ដែលមានកាលបរិច្ឆេទផ្ទាល់របស់វា នៅ legal.333.eco ជាកន្លែងដែលគ្រប់កំណែនៅតែរក្សាទុក។",
+            "khmer": "ours, a draft awaiting a native reader"
+        },
+        "draft-banner/en": {
+            "clause": "draft-banner",
+            "lang": "en",
+            "host": null,
+            "text": "A draft, not yet reviewed by a lawyer. It may change before the final version."
+        },
+        "draft-banner/en@storage.333.eco": {
+            "clause": "draft-banner",
+            "lang": "en",
+            "host": "storage.333.eco",
+            "text": "A draft, not yet reviewed by a lawyer. It may change before the final version, which will name the organization that operates this site.",
+            "tail": ", which will name the organization that operates this site",
+            "instead": "draft-banner/en"
+        },
+        "draft-banner/km": {
+            "clause": "draft-banner",
+            "lang": "km",
+            "host": null,
+            "text": "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។ អត្ថបទច្បាប់មានតែជាភាសាអង់គ្លេសប៉ុណ្ណោះ។",
+            "khmer": "ours, a draft awaiting a native reader"
+        },
+        "draft-banner/km@missaquarius.org": {
+            "clause": "draft-banner",
+            "lang": "km",
+            "host": "missaquarius.org",
+            "text": "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។",
+            "khmer": "ours, a draft awaiting a native reader",
+            "instead": "draft-banner/km"
+        },
+        "draft-banner/km@missaquarius.com": {
+            "clause": "draft-banner",
+            "lang": "km",
+            "host": "missaquarius.com",
+            "text": "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។",
+            "khmer": "ours, a draft awaiting a native reader",
+            "instead": "draft-banner/km"
+        },
+        "not-a-chartered-bank/en": {
+            "clause": "not-a-chartered-bank",
+            "lang": "en",
+            "host": null,
+            "text": "HeartBank® is a planetary data bank of gratitude. It is not a chartered bank or financial institution; it does not provide banking services, hold deposits, or extend credit.",
+            "then": "rail"
+        },
+        "not-a-chartered-bank/en@333.eco": {
+            "clause": "not-a-chartered-bank",
+            "lang": "en",
+            "host": "333.eco",
+            "text": "333.eco and Nhia Kou LLC are not a chartered bank or financial institution; they do not provide banking services, hold deposits, or extend credit.",
+            "then": "rail",
+            "instead": "not-a-chartered-bank/en"
+        },
+        "passkeys-and-log-in/en": {
+            "clause": "passkeys-and-log-in",
+            "lang": "en",
+            "host": null,
+            "text": "You are responsible for your passkey and for what is done in your account."
+        }
+    },
+    "slots": {
+        "contact": "each service's own",
+        "minors": "each service's own"
+    }
+}

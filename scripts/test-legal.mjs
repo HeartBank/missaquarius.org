@@ -118,5 +118,21 @@ for (const [file, lang, oldBanner] of [
     }
 }
 
+// 8. The vendored clauses (rule 8): one word edited in legal/clauses.json fails its lock; the Khmer Changes promise is held too.
+{
+    const d = copy(), f = join(d, "legal/clauses.json");
+    writeFileSync(f, readFileSync(f, "utf8").replace("not yet reviewed by a lawyer. It may change before the final version.\"", "not yet reviewed by an attorney. It may change before the final version.\""));
+    const p = check(d);
+    ok("one word edited in legal/clauses.json is named", has(p, /^legal\/clauses\.json: clauses\.json does not match its lock/), p.join(" | "));
+    rmSync(d, { recursive: true });
+}
+{
+    const d = copy(), f = join(d, "legal/privacy.km.md");
+    writeFileSync(f, readFileSync(f, "utf8").replace(RULED.changesKm, RULED.changesKm.replace("រក្សាទុក", "ទុក")));
+    const p = check(d);
+    ok("a Khmer Changes promise that differs from the ruled one is named", has(p, /^legal\/privacy\.km\.md: its "## .+" section must open with the ruled promise/), p.join(" | "));
+    rmSync(d, { recursive: true });
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

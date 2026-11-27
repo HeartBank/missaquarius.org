@@ -65,6 +65,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # ⛔ The legal pages and their shared clauses are checked BEFORE anything is uploaded (2026-11-26): a hand-edited
+      # legal/clauses.json, a stale page or a clause that left the ruled wording stops the deploy here, not only in legal.yml.
+      - name: Check the legal pages and clauses
+        run: node scripts/gen-legal.mjs --check
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
 

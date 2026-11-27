@@ -18,7 +18,9 @@
 //   6. the text never names Miss Aquarius as a party, never says "the estate", never "sign in"
 //   7. the shared clauses, word for word (founder 2026-11-26, "approve all"; legal.333.eco §clause-rulings): each page's frame
 //      carries the ruled draft banner and, beside it, the AI line, in the page's language; the English text's Changes section
-//      opens with the ruled promise
+//      opens with the ruled promise, and the Khmer text's with its Khmer
+//   8. the ruled wordings rule 7 holds are read from legal/clauses.json, vendored from legal.333.eco (founder 2026-11-26, "Build
+//      it now"), never typed here; that file matches its lock (scripts/check-clauses.mjs's integrity, offline): a hand edit fails
 //
 // The style, the head's icons and the footer are read from the site's own front page in the same language, so the policy page
 // looks like the site and follows it: change the front page, run this, and the policy page comes along.
@@ -27,6 +29,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { createHash } from "node:crypto";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { integrity } from "./check-clauses.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -92,19 +95,28 @@ export function missingFromPage(mdText, html) {
 }
 
 // The shared clauses' ruled wordings (rule 7). The banner and the AI line are the frame's, never the text's (so never in a
-// published version, and never a party: rule 6 reads only the text); the Changes promise is the English text's own.
+// published version, and never a party: rule 6 reads only the text); the Changes promise is the text's own. Read from
+// legal/clauses.json by id (rule 8), never typed here; the Khmer banner and the Khmer Changes are this host's own forms.
+const HOST = readFileSync(join(HERE, "..", "CNAME"), "utf8").trim();
+const CLAUSES = JSON.parse(readFileSync(join(HERE, "..", "legal", "clauses.json"), "utf8")).wordings;
+const ruled = (id) => {
+    if (!CLAUSES[id]?.text) throw new Error(`gen-legal: legal/clauses.json has no ${id}; vendor the clauses from legal.333.eco`);
+    return CLAUSES[id].text;
+};
 export const RULED = {
     en: {
-        banner: "A draft, not yet reviewed by a lawyer. It may change before the final version.",
-        ai: "Drafted with Miss Aquarius℠, an AI",
+        banner: ruled("draft-banner/en"),
+        ai: ruled("ai-disclosure/en"),
     },
     km: {
-        banner: "សេចក្តីព្រាង ដែលមិនទាន់ត្រូវបានពិនិត្យដោយមេធាវីនៅឡើយទេ។ វាអាចផ្លាស់ប្តូរមុនកំណែចុងក្រោយ។",
-        ai: "រៀបចំជាមួយ Miss Aquarius℠ ដែលជា AI",
+        banner: ruled(`draft-banner/km@${HOST}`),
+        ai: ruled("ai-disclosure/km"),
     },
     // Reworded the same day (founder 2026-11-26, "Reword it everywhere"): "a new version" is barred as a novelty claim.
-    changes: "Each change is published as its own version with its own date, at legal.333.eco, where every version stays.",
+    changes: ruled("changes/en"),
+    changesKm: ruled(`changes/km@${HOST}`),
 };
+const KM_CHANGES_HEADING = "ការផ្លាស់ប្តូរ";
 export function clauseProblems(file, html, lang) {
     const out = [], text = pageText(html), r = RULED[lang];
     if (!text.includes(r.banner)) out.push(`${file}: the frame does not carry the ruled draft banner: "${r.banner}"`);
@@ -236,6 +248,10 @@ export function check(root) {
     try { en = readFileSync(join(root, "legal", "privacy.md"), "utf8"); km = readFileSync(join(root, "legal", "privacy.km.md"), "utf8"); }
     catch (e) { return [`legal/privacy.md and legal/privacy.km.md must both exist (${e.code ?? e.message})`]; }
     problems.push(...shapeProblems(en));
+    try {
+        for (const x of integrity(readFileSync(join(root, "legal", "clauses.json")), readFileSync(join(root, "legal", "clauses.lock.json"))))
+            problems.push(`legal/clauses.json: ${x} ⛔ Never edit it here: change the clause at legal.333.eco, then vendor again.`);
+    } catch (e) { problems.push(`legal/clauses.json and legal/clauses.lock.json must both exist, vendored from legal.333.eco (${e.code ?? e.message})`); }
     const pin = PIN.exec(km.split("\n")[0] ?? "");
     if (!pin) problems.push("legal/privacy.km.md: line 1 must be the pin comment naming the sha256 of the legal/privacy.md it translates");
     else if (pin[1] !== sha256(en)) problems.push(`legal/privacy.km.md is STALE: it translates sha256 ${pin[1].slice(0, 12)}…, but legal/privacy.md is now ${sha256(en).slice(0, 12)}… — update the Khmer, then the pin`);
@@ -258,6 +274,7 @@ export function check(root) {
         if (!foot.includes(`href="${href}"`)) problems.push(`${f}: its footer does not link to ${href}`);
     }
     if (!en.includes(`\n## Changes\n\n${RULED.changes}\n`)) problems.push(`legal/privacy.md: its "## Changes" section must open with the ruled promise: "${RULED.changes}"`);
+    if (!km.includes(`\n## ${KM_CHANGES_HEADING}\n\n${RULED.changesKm}\n`)) problems.push(`legal/privacy.km.md: its "## ${KM_CHANGES_HEADING}" section must open with the ruled promise: "${RULED.changesKm}"`);
     for (const [name, text] of [["legal/privacy.md", en], ["legal/privacy.km.md", km]]) {
         if (/Miss Aquarius/i.test(text)) problems.push(`${name}: names Miss Aquarius — no page names her as a party (founder 2026-11-24); name the operator, or "the organization that will be named in the final version"`);
         if (/\bthe estate\b/i.test(text)) problems.push(`${name}: says "the estate" — never in a legal text; name the entity`);
